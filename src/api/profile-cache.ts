@@ -1,27 +1,18 @@
 /**
- * Simple in-memory cache for profile data.
- * Enforces a 5-minute TTL.
+ * Simple TTL-based cache for LinkedIn profile data.
  */
-export class ProfileCache {
-  private cache: Map<string, { data: any; expiresAt: number }>;
-  private readonly ttl: number;
-
-  constructor(ttlMinutes: number = 5) {
-    this.cache = new Map();
-    this.ttl = ttlMinutes * 60 * 1000;
-  }
+class ProfileCache {
+  private cache: Map<string, { data: any; expiry: number }> = new Map();
+  private readonly DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
 
   /**
-   * Gets data from the cache.
-   * Returns null if the data is not found or has expired.
+   * Gets a value from the cache.
    */
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    if (!entry) {
-      return null;
-    }
+    if (!entry) return null;
 
-    if (Date.now() > entry.expiresAt) {
+    if (Date.now() > entry.expiry) {
       this.cache.delete(key);
       return null;
     }
@@ -30,27 +21,31 @@ export class ProfileCache {
   }
 
   /**
-   * Sets data in the cache with the configured TTL.
+   * Sets a value in the cache.
    */
-  set<T>(key: string, data: T): void {
+  set<T>(key: string, data: T, ttl: number = this.DEFAULT_TTL): void {
     this.cache.set(key, {
       data,
-      expiresAt: Date.now() + this.ttl,
+      expiry: Date.now() + ttl,
     });
   }
 
   /**
-   * Clears the cache.
+   * Invalidates a cache entry or the entire cache.
    */
-  clear(): void {
-    this.cache.clear();
+  invalidate(key?: string): void {
+    if (key) {
+      this.cache.delete(key);
+    } else {
+      this.cache.clear();
+    }
   }
 
   /**
-   * Removes a specific key from the cache.
+   * Clears the entire cache.
    */
-  delete(key: string): void {
-    this.cache.delete(key);
+  clear(): void {
+    this.cache.clear();
   }
 }
 

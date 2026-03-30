@@ -3,6 +3,8 @@ import { ToolResult, LinkedInProfile } from '../types.js';
 import { validate } from '../utils/char-counter.js';
 import { createDiff } from '../utils/diff.js';
 import { get_profile } from './read.js';
+import { linkedinClient } from '../api/client.js';
+import { ENDPOINTS } from '../api/endpoints.js';
 
 /**
  * Updates the LinkedIn headline.
@@ -25,9 +27,22 @@ export async function update_headline(newHeadline: string): Promise<ToolResult> 
   const diff = createDiff('headline', profile.headline || '', newHeadline);
 
   try {
-    // In a real scenario, we would make a PUT request to update the profile.
-    // For now, we'll simulate the update and update the cache.
-    // await linkedinClient.post(ENDPOINTS.ME, { headline: { localized: { 'en_US': newHeadline } } });
+    // Perform partial update using POST with PATCH override (X-RestLi-Method: PARTIAL_UPDATE)
+    await linkedinClient.post(ENDPOINTS.ME, {
+      patch: {
+        $set: {
+          headline: {
+            localized: {
+              'en_US': newHeadline
+            }
+          }
+        }
+      }
+    }, {
+      headers: {
+        'X-RestLi-Method': 'PARTIAL_UPDATE'
+      }
+    });
     
     profile.headline = newHeadline;
     profileCache.set('full_profile', profile);
@@ -70,7 +85,23 @@ export async function update_summary(newSummary: string): Promise<ToolResult> {
   const diff = createDiff('summary', profile.summary || '', newSummary);
 
   try {
-    // Simulate the update and update the cache.
+    // Perform partial update for summary
+    await linkedinClient.post(ENDPOINTS.ME, {
+      patch: {
+        $set: {
+          summary: {
+            localized: {
+              'en_US': newSummary
+            }
+          }
+        }
+      }
+    }, {
+      headers: {
+        'X-RestLi-Method': 'PARTIAL_UPDATE'
+      }
+    });
+
     profile.summary = newSummary;
     profileCache.set('full_profile', profile);
 
@@ -89,4 +120,26 @@ export async function update_summary(newSummary: string): Promise<ToolResult> {
       error: error.message,
     };
   }
+}
+
+/**
+ * Updates profile pronunciation.
+ */
+export async function update_pronunciation(pronunciation: string): Promise<ToolResult> {
+  return {
+    success: true,
+    message: 'Pronunciation updated (simulated).',
+    data: { pronunciation }
+  };
+}
+
+/**
+ * Updates contact information.
+ */
+export async function update_contact_info(contactInfo: any): Promise<ToolResult> {
+  return {
+    success: true,
+    message: 'Contact information updated (simulated).',
+    data: { contactInfo }
+  };
 }

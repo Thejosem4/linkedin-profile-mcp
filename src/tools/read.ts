@@ -25,12 +25,25 @@ export async function get_profile(): Promise<ToolResult> {
     // In a real scenario, we would fetch experiences, educations, etc. separately
     // or use a complex projection if the API supports it.
     // For this implementation, we'll create a profile object with what we have.
+    // Helper to extract localized string from LinkedIn API response
+    const getLocalized = (field: any, fallback: string = ''): string => {
+      if (!field) return fallback;
+      if (typeof field === 'string') return field;
+      if (field.localized) {
+        const locales = Object.keys(field.localized);
+        if (locales.length > 0) {
+          return field.localized[locales[0]];
+        }
+      }
+      return field.preferredLocale?.language ? field[field.preferredLocale.language] : fallback;
+    };
+
     const profile: LinkedInProfile = {
       id: profileData.id,
-      firstName: profileData.localizedFirstName,
-      lastName: profileData.localizedLastName,
-      headline: profileData.headline?.localized?.['en_US'] || '',
-      summary: profileData.summary?.localized?.['en_US'] || '',
+      firstName: profileData.localizedFirstName || getLocalized(profileData.firstName),
+      lastName: profileData.localizedLastName || getLocalized(profileData.lastName),
+      headline: getLocalized(profileData.headline),
+      summary: getLocalized(profileData.summary),
       experiences: [],
       educations: [],
       skills: [],

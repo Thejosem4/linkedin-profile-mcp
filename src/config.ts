@@ -9,6 +9,11 @@ const configSchema = z.object({
   redirectUri: z.string().url("LINKEDIN_REDIRECT_URI must be a valid URL"),
   port: z.coerce.number().default(3000),
   logLevel: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  userSector: z.string().default('technology'),
+  userObjective: z.enum(['job_search', 'personal_brand', 'freelance', 'promotion']).default('job_search'),
+  userAudience: z.enum(['recruiters', 'clients', 'peers', 'general']).default('recruiters'),
+  userTone: z.enum(['formal', 'conversacional', 'técnico']).default('conversacional'),
+  profileLanguage: z.string().default('en'),
 });
 
 const env = {
@@ -17,6 +22,11 @@ const env = {
   redirectUri: process.env.LINKEDIN_REDIRECT_URI,
   port: process.env.PORT,
   logLevel: process.env.LOG_LEVEL,
+  userSector: process.env.USER_SECTOR,
+  userObjective: process.env.USER_OBJECTIVE,
+  userAudience: process.env.USER_AUDIENCE,
+  userTone: process.env.USER_TONE,
+  profileLanguage: process.env.PROFILE_LANGUAGE,
 };
 
 const parsed = configSchema.safeParse(env);

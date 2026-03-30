@@ -35,7 +35,22 @@ import {
   updateSummaryTemplate,
   updateExperienceTemplate
 } from "./prompts/templates.js";
-import { LinkedInProfile, Experience, Certification, Project, LinkedInDate } from "./types.js";
+import { LinkedInProfile, Experience, Certification, Project, UserContext } from "./types.js";
+import { config } from "./config.js";
+
+/**
+ * Helper to build user context from app configuration.
+ */
+function getAppUserContext(): UserContext {
+  return {
+    userId: "current_user",
+    sector: config.userSector,
+    objective: config.userObjective as any,
+    audience: config.userAudience as any,
+    tone: config.userTone as any,
+    language: config.profileLanguage,
+  };
+}
 
 /**
  * LinkedIn Profile MCP Server.
@@ -44,7 +59,7 @@ import { LinkedInProfile, Experience, Certification, Project, LinkedInDate } fro
 const server = new Server(
   {
     name: "linkedin-profile-mcp",
-    version: "0.1.0",
+    version: "1.0.0",
   },
   {
     capabilities: {
@@ -103,7 +118,7 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
           role: "user",
           content: {
             type: "text",
-            text: buildSystemPrompt({ userId: "current_user" }),
+            text: buildSystemPrompt(getAppUserContext()),
           },
         },
       ],
@@ -156,29 +171,26 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
+        name: "authenticate",
+        description: "Start the OAuth 2.0 flow to authenticate with LinkedIn. Run this first to get your tokens.",
+        inputSchema: { type: "object", properties: {} },
+      },
+      {
         name: "get_profile",
         description: "Get the full LinkedIn profile of the authenticated user.",
-        inputSchema: {
-          type: "object",
-          properties: {},
-        },
+        inputSchema: { type: "object", properties: {} },
       },
       {
         name: "get_analytics",
         description: "Get LinkedIn profile analytics (e.g., profile views).",
-        inputSchema: {
-          type: "object",
-          properties: {},
-        },
+        inputSchema: { type: "object", properties: {} },
       },
       {
         name: "update_headline",
         description: "Update the LinkedIn headline.",
         inputSchema: {
           type: "object",
-          properties: {
-            headline: { type: "string" },
-          },
+          properties: { headline: { type: "string" } },
           required: ["headline"],
         },
       },
@@ -187,9 +199,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         description: "Update the LinkedIn summary (About section).",
         inputSchema: {
           type: "object",
-          properties: {
-            summary: { type: "string" },
-          },
+          properties: { summary: { type: "string" } },
           required: ["summary"],
         },
       },
@@ -231,7 +241,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "update_skills",
-        description: "Update the skills list.",
+        description: "Update the skills list (max 50).",
         inputSchema: {
           type: "object",
           properties: {
@@ -251,6 +261,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               properties: {
                 name: { type: "string" },
                 issuingOrganization: { type: "string" },
+                issueDate: { type: "object", properties: { month: { type: "number" }, year: { type: "number" } }, required: ["year"] },
+                credentialUrl: { type: "string" }
               },
               required: ["name", "issuingOrganization"],
             },
@@ -259,22 +271,157 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "add_license",
+        description: "Add a professional license.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            license: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                issuingOrganization: { type: "string" },
+                licenseNumber: { type: "string" }
+              },
+              required: ["name", "issuingOrganization"],
+            },
+          },
+          required: ["license"],
+        },
+      },
+      {
+        name: "add_project",
+        description: "Add a project to the profile.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            description: { type: "string", maxLength: 300 },
+            url: { type: "string" },
+            startDate: { type: "object", properties: { month: { type: "number" }, year: { type: "number" } }, required: ["year"] }
+          },
+          required: ["name", "description", "startDate"],
+        },
+      },
+      {
+        name: "add_honor_award",
+        description: "Add an honor or award.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            issuer: { type: "string" },
+            description: { type: "string" }
+          },
+          required: ["title"],
+        },
+      },
+      {
         name: "post_update",
         description: "Post a short update to LinkedIn.",
         inputSchema: {
           type: "object",
-          properties: {
-            text: { type: "string" },
-          },
+          properties: { text: { type: "string", maxLength: 3000 } },
           required: ["text"],
+        },
+      },
+      {
+        name: "post_article",
+        description: "Post an article to LinkedIn.",
+        inputSchema: {
+          type: "object",
+          properties: { 
+            title: { type: "string", maxLength: 200 },
+            content: { type: "string" }
+          },
+          required: ["title", "content"],
+        },
+      },
+      {
+        name: "draft_recommendation",
+        description: "Draft a recommendation for a connection.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            connectionName: { type: "string" },
+            relationship: { type: "string" },
+            keyAchievements: { type: "array", items: { type: "string" } }
+          },
+          required: ["connectionName", "relationship", "keyAchievements"],
+        },
+      },
+      {
+        name: "update_open_to_work",
+        description: "Update Open to Work status.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            isOpen: { type: "boolean" },
+            jobTitles: { type: "array", items: { type: "string" } }
+          },
+          required: ["isOpen"],
+        },
+      },
+      {
+        name: "add_volunteering",
+        description: "Add volunteering experience.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            organization: { type: "string" },
+            role: { type: "string" },
+            cause: { type: "string" }
+          },
+          required: ["organization", "role", "cause"],
+        },
+      },
+      {
+        name: "update_languages",
+        description: "Update profile languages.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            languages: { 
+              type: "array", 
+              items: { 
+                type: "object", 
+                properties: { 
+                  name: { type: "string" }, 
+                  proficiency: { type: "string", enum: ["ELEMENTARY", "LIMITED_WORKING", "PROFESSIONAL_WORKING", "FULL_PROFESSIONAL", "NATIVE_OR_BILINGUAL"] } 
+                } 
+              } 
+            }
+          },
+          required: ["languages"],
+        },
+      },
+      {
+        name: "add_publication",
+        description: "Add a publication.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            publisher: { type: "string" }
+          },
+          required: ["title", "publisher"],
         },
       },
       {
         name: "analyze_profile",
         description: "Analyze the profile and provide strategic improvements.",
+        inputSchema: { type: "object", properties: {} },
+      },
+      {
+        name: "generate_content",
+        description: "Generate optimized text for a profile section.",
         inputSchema: {
           type: "object",
-          properties: {},
+          properties: {
+            section: { type: "string", enum: ["headline", "summary", "experience"] },
+            goals: { type: "string" }
+          },
+          required: ["section"],
         },
       },
       {
@@ -282,18 +429,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         description: "Optimize the profile for ATS by comparing it with a job description.",
         inputSchema: {
           type: "object",
-          properties: {
-            jobDescription: { type: "string" },
-          },
+          properties: { jobDescription: { type: "string" } },
           required: ["jobDescription"],
-        },
-      },
-      {
-        name: "authenticate",
-        description: "Start the OAuth 2.0 flow to authenticate with LinkedIn. Run this first to get your tokens.",
-        inputSchema: {
-          type: "object",
-          properties: {},
         },
       },
     ],
@@ -309,18 +446,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     switch (name) {
       case "authenticate": {
-        console.error("🔑 Starting authentication flow...");
         const { oauthManager } = await import("./auth/oauth.js");
         const code = await oauthManager.startCallbackServer();
-        const tokens = await oauthManager.handleCallback(code);
-        return {
-          content: [
-            {
-              type: "text",
-              text: "✅ Authentication successful! Tokens have been saved securely.",
-            },
-          ],
-        };
+        await oauthManager.handleCallback(code);
+        return { content: [{ type: "text", text: "✅ Authentication successful!" }] };
       }
       case "get_profile": {
         const result = await get_profile();
@@ -343,7 +472,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
       case "update_education": {
-        const result = await update_education(args?.educationId as string, args?.updates as Partial<LinkedInProfile['educations'][0]>);
+        const result = await update_education(args?.educationId as string, args?.updates as any);
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
       case "update_skills": {
@@ -354,12 +483,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const result = await add_certification(args?.certification as any);
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
+      case "add_license": {
+        const result = await add_license(args?.license as any);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+      case "add_project": {
+        const result = await add_project(args as any);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+      case "add_honor_award": {
+        const result = await add_honor_award(args as any);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
       case "post_update": {
         const result = await post_update(args?.text as string);
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
+      case "post_article": {
+        const result = await post_article(args?.title as string, args?.content as string);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+      case "draft_recommendation": {
+        const result = await draft_recommendation(args?.connectionName as string, args?.relationship as string, args?.keyAchievements as string[]);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+      case "update_open_to_work": {
+        const result = await update_open_to_work(args?.isOpen as boolean, args?.jobTitles as string[]);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+      case "add_volunteering": {
+        const result = await add_volunteering(args?.organization as string, args?.role as string, args?.cause as string, { year: 2024 } as any);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+      case "update_languages": {
+        const result = await update_languages(args?.languages as any);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+      case "add_publication": {
+        const result = await add_publication(args?.title as string, args?.publisher as string, { year: 2024 } as any);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
       case "analyze_profile": {
         const result = await analyze_profile();
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+      case "generate_content": {
+        const result = await generate_content(args?.section as any, args?.goals as string);
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
       case "ats_optimize": {

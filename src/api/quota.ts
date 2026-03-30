@@ -2,128 +2,98 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 
-/**
- * Interface for the quota data stored in the JSON file.
- */
 interface QuotaData {
-  /**
-   * The date the quota was last reset (YYYY-MM-DD).
-   */
-  lastResetDate: string;
-
-  /**
-   * The number of requests made today.
-   */
-  requestCount: number;
+  used: number;
+  lastReset: string;
 }
 
 /**
- * Tracks the number of API requests made to LinkedIn.
- * Enforces a daily limit of 100 requests.
+ * Tracks daily API usage to prevent exceeding LinkedIn's limits.
+ * Persists data to ~/.linkedin-profile-mcp/quota.json
  */
 export class QuotaTracker {
-  private readonly quotaFilePath: string;
-  private readonly dailyLimit = 100;
+  private readonly quotaDir: string;
+  private readonly quotaFile: string;
+  private readonly DAILY_LIMIT = 100;
 
   constructor() {
-    this.quotaFilePath = path.join(os.homedir(), '.linkedin-profile-mcp', 'quota.json');
+    this.quotaDir = path.join(os.homedir(), '.linkedin-profile-mcp');
+    this.quotaFile = path.join(this.quotaDir, 'quota.json');
   }
 
-  /**
-   * Ensures the quota directory and file exist.
-   */
-  private async ensureQuotaFile(): Promise<void> {
-    const dir = path.dirname(this.quotaFilePath);
+  private async ensureDir(): Promise<void> {
     try {
-      await fs.mkdir(dir, { recursive: true });
+      await fs.mkdir(this.quotaDir, { recursive: true });
     } catch (error) {
-      // Ignore if directory already exists
+      // Ignore if directory exists
     }
+  }
 
+  private async readQuota(): Promise<QuotaData> {
+    await this.ensureDir();
     try {
-      await fs.access(this.quotaFilePath);
+      const data = await fs.readFile(this.quotaFile, 'utf-8');
+      const parsed = JSON.parse(data);
+      
+      // Check if we need to reset (new day)
+      const lastReset = new Date(parsed.lastReset);
+      const now = new Date();
+      
+      if (lastReset.getUTCDate() !== now.getUTCDate() || 
+          lastReset.getUTCMonth() !== now.getUTCMonth() || 
+          lastReset.getUTCFullYear() !== now.getUTCFullYear()) {
+        return this.resetQuota();
+      }
+      
+      return parsed;
     } catch (error) {
-      // File doesn't exist, create it with initial data
-      const initialData: QuotaData = {
-        lastResetDate: this.getTodayDateString(),
-        requestCount: 0,
-      };
-      await fs.writeFile(this.quotaFilePath, JSON.stringify(initialData, null, 2));
+      return this.resetQuota();
     }
   }
 
-  /**
-   * Gets the current date as a YYYY-MM-DD string.
-   */
-  private getTodayDateString(): string {
-    return new Date().toISOString().split('T')[0];
+  private async resetQuota(): Promise<QuotaData> {
+    const data: QuotaData = {
+      used: 0,
+      lastReset: new Date().toISOString(),
+    };
+    await this.saveQuota(data);
+    return data;
+  }
+
+  private async saveQuota(data: QuotaData): Promise<void> {
+    await this.ensureDir();
+    await fs.writeFile(this.quotaFile, JSON.stringify(data, null, 2));
   }
 
   /**
-   * Reads the current quota data from the file.
+   * Increments the usage counter.
    */
-  private async readQuotaData(): Promise<QuotaData> {
-    await this.ensureQuotaFile();
-    const content = await fs.readFile(this.quotaFilePath, 'utf-8');
-    return JSON.parse(content) as QuotaData;
+  async increment(): Promise<number> {
+    const data = await this.readQuota();
+    data.used += 1;
+    await this.saveQuota(data);
+    return data.used;
   }
 
   /**
-   * Writes the quota data to the file.
+   * Gets current usage statistics.
    */
-  private async writeQuotaData(data: QuotaData): Promise<void> {
-    await fs.writeFile(this.quotaFilePath, JSON.stringify(data, null, 2));
+  async getUsage(): Promise<{ used: number; remaining: number; resetAt: string }> {
+    const data = await this.readQuota();
+    return {
+      used: data.used,
+      remaining: Math.max(0, this.DAILY_LIMIT - data.used),
+      resetAt: new Date(new Date(data.lastReset).getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    };
   }
 
   /**
-   * Checks if the quota has been exceeded for today.
-   * Resets the quota if it's a new day.
+   * Checks if the daily limit has been reached.
    */
-  async checkQuota(): Promise<boolean> {
-    const data = await this.readQuotaData();
-    const today = this.getTodayDateString();
-
-    if (data.lastResetDate !== today) {
-      // New day, reset quota
-      data.lastResetDate = today;
-      data.requestCount = 0;
-      await this.writeQuotaData(data);
-      return true;
-    }
-
-    return data.requestCount < this.dailyLimit;
-  }
-
-  /**
-   * Increments the request count for today.
-   */
-  async incrementRequestCount(): Promise<void> {
-    const data = await this.readQuotaData();
-    const today = this.getTodayDateString();
-
-    if (data.lastResetDate !== today) {
-      data.lastResetDate = today;
-      data.requestCount = 1;
-    } else {
-      data.requestCount++;
-    }
-
-    await this.writeQuotaData(data);
-  }
-
-  /**
-   * Gets the number of remaining requests for today.
-   */
-  async getRemainingRequests(): Promise<number> {
-    const data = await this.readQuotaData();
-    const today = this.getTodayDateString();
-
-    if (data.lastResetDate !== today) {
-      return this.dailyLimit;
-    }
-
-    return Math.max(0, this.dailyLimit - data.requestCount);
+  async isLimitReached(): Promise<boolean> {
+    const data = await this.readQuota();
+    return data.used >= this.DAILY_LIMIT;
   }
 }
 
-export const quotaTracker = new QuotaTracker();
+export const quota = new QuotaTracker();

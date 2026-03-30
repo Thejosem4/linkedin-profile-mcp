@@ -4,6 +4,8 @@ export interface LinkedInProfile {
   lastName: string;
   headline?: string;
   summary?: string;
+  vanityName?: string;
+  profilePicture?: string;
   location?: string;
   industry?: string;
   experiences: Experience[];
@@ -11,6 +13,10 @@ export interface LinkedInProfile {
   skills: Skill[];
   certifications: Certification[];
   projects: Project[];
+  honors?: any[];
+  languages?: { name: string; proficiency: string }[];
+  volunteering?: any[];
+  publications?: any[];
 }
 
 export interface Experience {
@@ -42,10 +48,13 @@ export interface Skill {
 export interface Certification {
   id?: string;
   name: string;
+  issuingOrganization?: string;
   authority?: string;
   licenseNumber?: string;
   startDate?: LinkedInDate;
   endDate?: LinkedInDate;
+  credentialId?: string;
+  credentialUrl?: string;
 }
 
 export interface Project {
@@ -55,6 +64,7 @@ export interface Project {
   startDate?: LinkedInDate;
   endDate?: LinkedInDate;
   url?: string;
+  members?: string[];
 }
 
 export interface LinkedInDate {
@@ -71,14 +81,19 @@ export interface ToolResult {
 
 export interface DiffPreview {
   field: string;
-  original: string;
-  proposed: string;
-  changeType: 'update' | 'add' | 'remove';
+  before: string;
+  after: string;
+  charsBefore: number;
+  charsAfter: number;
+  charsRemaining: number;
+  warnings: string[];
 }
 
 export interface UserContext {
   userId: string;
-  accessToken?: string;
-  refreshToken?: string;
-  expiresAt?: number;
+  sector?: string;
+  objective?: 'job_search' | 'personal_brand' | 'freelance' | 'promotion';
+  audience?: 'recruiters' | 'clients' | 'peers' | 'general';
+  tone?: 'formal' | 'conversacional' | 'técnico';
+  language?: string;
 }

@@ -123,9 +123,11 @@ export class OAuthManager {
       const app = express();
       let server: Server;
 
-      const port = new URL(config.redirectUri).port || '3000';
+      const url = new URL(config.redirectUri);
+      const port = url.port || '3000';
+      const path = url.pathname || '/';
 
-      app.get('/', async (req, res) => {
+      app.get(path, async (req, res) => {
         const { code, state, error, error_description } = req.query;
 
         if (error) {

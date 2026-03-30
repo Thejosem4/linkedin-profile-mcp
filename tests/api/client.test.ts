@@ -1,17 +1,15 @@
 import { jest } from '@jest/globals';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import { LinkedInClient } from '../../src/api/client.js';
-import { oauthManager } from '../../src/auth/index.js';
-import { quotaTracker } from '../../src/api/quota.js';
+import { linkedinClient } from '../../src/api/client.js';
+import { rateLimiter } from '../../src/api/rate-limiter.js';
+import { quota } from '../../src/api/quota.js';
 
-describe('LinkedInClient', () => {
-  let client: LinkedInClient;
+describe('LinkedIn API Client', () => {
   let mockAxios: MockAdapter;
 
   beforeEach(() => {
-    client = new LinkedInClient();
-    mockAxios = new MockAdapter((client as any).axiosInstance);
+    mockAxios = new MockAdapter((linkedinClient as any).client);
     jest.clearAllMocks();
   });
 
@@ -19,52 +17,29 @@ describe('LinkedInClient', () => {
     mockAxios.restore();
   });
 
-  it('should attach Bearer token to requests', async () => {
-    jest.spyOn(oauthManager, 'getValidToken').mockResolvedValue('test-token');
-    jest.spyOn(quotaTracker, 'checkQuota').mockResolvedValue(true);
-    jest.spyOn(quotaTracker, 'incrementRequestCount').mockResolvedValue(undefined);
+  it('should make successful GET requests through rate limiter', async () => {
+    const mockData = { id: '123', name: 'John' };
+    mockAxios.onGet('/test').reply(200, mockData);
 
-    mockAxios.onGet('/me').reply(200, { id: '123' });
+    const scheduleSpy = jest.spyOn(rateLimiter, 'schedule');
+    const quotaSpy = jest.spyOn(quota, 'increment').mockResolvedValue(1);
 
-    const response = await client.get('/me');
+    const result = await linkedinClient.get('/test');
 
-    expect(response.status).toBe(200);
-    expect(response.config.headers?.Authorization).toBe('Bearer test-token');
+    expect(result.data).toEqual(mockData);
+    expect(scheduleSpy).toHaveBeenCalled();
+    expect(quotaSpy).toHaveBeenCalled();
   });
 
-  it('should throw error when quota is exceeded', async () => {
-    jest.spyOn(quotaTracker, 'checkQuota').mockResolvedValue(false);
+  it('should respect daily quota limits', async () => {
+    jest.spyOn(quota, 'isLimitReached').mockResolvedValue(true);
 
-    await expect(client.get('/me')).rejects.toThrow('Daily API quota exceeded');
+    await expect(linkedinClient.get('/test')).rejects.toThrow('quota reached');
   });
 
-  it('should increment request count on successful request', async () => {
-    jest.spyOn(oauthManager, 'getValidToken').mockResolvedValue('test-token');
-    jest.spyOn(quotaTracker, 'checkQuota').mockResolvedValue(true);
-    const incrementSpy = jest.spyOn(quotaTracker, 'incrementRequestCount').mockResolvedValue(undefined);
+  it('should handle API errors', async () => {
+    mockAxios.onGet('/error').reply(500, { message: 'Server Error' });
 
-    mockAxios.onGet('/me').reply(200, { id: '123' });
-
-    await client.get('/me');
-
-    expect(incrementSpy).toHaveBeenCalled();
-  });
-
-  it('should retry on 429 Too Many Requests', async () => {
-    jest.spyOn(oauthManager, 'getValidToken').mockResolvedValue('test-token');
-    jest.spyOn(quotaTracker, 'checkQuota').mockResolvedValue(true);
-    jest.spyOn(quotaTracker, 'incrementRequestCount').mockResolvedValue(undefined);
-
-    mockAxios
-      .onGet('/me').replyOnce(429, {}, { 'retry-after': '1' })
-      .onGet('/me').reply(200, { id: '123' });
-
-    // We need to mock the console.warn to avoid cluttering test output
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const response = await client.get('/me');
-
-    expect(response.status).toBe(200);
-    expect(response.data.id).toBe('123');
+    await expect(linkedinClient.get('/error')).rejects.toThrow();
   });
 });

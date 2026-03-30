@@ -1,63 +1,82 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { oauthManager } from '../auth/index.js';
+import axios, { AxiosInstance } from 'axios';
+import { config } from '../config.js';
+import { oauthManager } from '../auth/oauth.js';
 import { rateLimiter } from './rate-limiter.js';
-import { LINKEDIN_API_BASE_URL } from './endpoints.js';
+import { quota } from './quota.js';
 
 /**
- * LinkedIn API client.
+ * LinkedIn API Client.
  * Handles authentication, rate limiting, and quota tracking.
  */
-export class LinkedInClient {
-  private readonly axiosInstance: AxiosInstance;
+class LinkedInClient {
+  private client: AxiosInstance;
+  private readonly BASE_URL = 'https://api.linkedin.com';
 
   constructor() {
-    this.axiosInstance = axios.create({
-      baseURL: LINKEDIN_API_BASE_URL,
+    this.client = axios.create({
+      baseURL: this.BASE_URL,
       headers: {
-        'X-Restli-Protocol-Version': '2.0.0',
         'Content-Type': 'application/json',
+        'X-Restli-Protocol-Version': '2.0.0',
       },
     });
 
-    // Request interceptor to attach the Bearer token
-    this.axiosInstance.interceptors.request.use(
-      async (config) => {
-        const token = await oauthManager.getValidToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
+    // Add request interceptor for authentication
+    this.client.interceptors.request.use(async (axiosConfig) => {
+      const token = await oauthManager.getValidToken();
+      if (token) {
+        axiosConfig.headers.Authorization = `Bearer ${token}`;
+      }
+      return axiosConfig;
+    });
+
+    // Add response interceptor for quota tracking
+    this.client.interceptors.response.use(async (response) => {
+      await quota.increment();
+      return response;
+    }, (error) => {
+      return Promise.reject(error);
+    });
   }
 
   /**
    * Makes a GET request through the rate limiter.
    */
-  async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    return rateLimiter.schedule(() => this.axiosInstance.get<T>(url, config));
+  async get<T = any>(url: string, axiosConfig?: any): Promise<{ data: T }> {
+    if (await quota.isLimitReached()) {
+      throw new Error('Daily LinkedIn API quota reached (100 requests/day).');
+    }
+    return rateLimiter.schedule(() => this.client.get(url, axiosConfig));
   }
 
   /**
    * Makes a POST request through the rate limiter.
    */
-  async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    return rateLimiter.schedule(() => this.axiosInstance.post<T>(url, data, config));
+  async post<T = any>(url: string, data?: any, axiosConfig?: any): Promise<{ data: T }> {
+    if (await quota.isLimitReached()) {
+      throw new Error('Daily LinkedIn API quota reached (100 requests/day).');
+    }
+    return rateLimiter.schedule(() => this.client.post(url, data, axiosConfig));
   }
 
   /**
    * Makes a PUT request through the rate limiter.
    */
-  async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    return rateLimiter.schedule(() => this.axiosInstance.put<T>(url, data, config));
+  async put<T = any>(url: string, data?: any, axiosConfig?: any): Promise<{ data: T }> {
+    if (await quota.isLimitReached()) {
+      throw new Error('Daily LinkedIn API quota reached (100 requests/day).');
+    }
+    return rateLimiter.schedule(() => this.client.put(url, data, axiosConfig));
   }
 
   /**
    * Makes a DELETE request through the rate limiter.
    */
-  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    return rateLimiter.schedule(() => this.axiosInstance.delete<T>(url, config));
+  async delete<T = any>(url: string, axiosConfig?: any): Promise<{ data: T }> {
+    if (await quota.isLimitReached()) {
+      throw new Error('Daily LinkedIn API quota reached (100 requests/day).');
+    }
+    return rateLimiter.schedule(() => this.client.delete(url, axiosConfig));
   }
 }
 

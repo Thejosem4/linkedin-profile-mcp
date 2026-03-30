@@ -1,62 +1,39 @@
 import Bottleneck from 'bottleneck';
-import { quotaTracker } from './quota.js';
 
 /**
- * Rate limiter for LinkedIn API calls.
- * Enforces daily limits and handles retries on 429.
+ * Rate limiter configuration for the LinkedIn API.
+ * LinkedIn's basic tier allows approximately 100 requests per day.
+ * 
+ * We use a reservoir of 100 requests that refreshes every 24 hours.
+ * We also limit concurrency to 1 and add a small delay between requests.
  */
-export class RateLimiter {
-  private readonly limiter: Bottleneck;
+export const rateLimiter = new Bottleneck({
+  maxConcurrent: 1,
+  minTime: 1000, // 1 second between requests to prevent rapid-fire issues
+  reservoir: 100, // Daily quota
+  reservoirRefreshAmount: 100,
+  reservoirRefreshInterval: 24 * 60 * 60 * 1000, // 24 hours
+});
 
-  constructor() {
-    this.limiter = new Bottleneck({
-      // 100 requests per day is roughly 1 request every 14.4 minutes.
-      // However, we want to allow some bursting, so we'll set a more reasonable
-      // short-term limit and rely on the QuotaTracker for the daily limit.
-      minTime: 1000, // 1 request per second
-      maxConcurrent: 1,
-    });
+/**
+ * High-priority rate limiter for authentication and critical read operations.
+ */
+export const highPriorityLimiter = new Bottleneck({
+  maxConcurrent: 1,
+  minTime: 500,
+});
 
-    // Handle 429 Too Many Requests
-    this.limiter.on('failed', async (error, jobInfo) => {
-      if (error.response?.status === 429) {
-        const retryAfter = error.response.headers['retry-after'];
-        const waitTime = retryAfter ? parseInt(retryAfter, 10) * 1000 : 5000;
-
-        console.warn(`⚠️ Rate limited by LinkedIn. Retrying in ${waitTime}ms...`);
-        return waitTime;
-      }
-
-      // Don't retry for other errors
-      return null;
-    });
+// Setup event listeners for debugging
+rateLimiter.on('failed', async (error, jobInfo) => {
+  const id = jobInfo.options.id;
+  console.warn(`⚠️ Rate limiter job ${id} failed: ${error.message}`);
+  
+  if (jobInfo.retryCount < 2) {
+    console.log(`🔄 Retrying job ${id}...`);
+    return 1000 * (jobInfo.retryCount + 1);
   }
+});
 
-  /**
-   * Executes a function through the rate limiter.
-   * Checks the daily quota before executing.
-   */
-  async schedule<T>(fn: () => Promise<T>): Promise<T> {
-    const hasQuota = await quotaTracker.checkQuota();
-    if (!hasQuota) {
-      throw new Error('❌ Daily API quota exceeded (100 requests/day).');
-    }
-
-    return this.limiter.schedule(async () => {
-      try {
-        const result = await fn();
-        await quotaTracker.incrementRequestCount();
-        return result;
-      } catch (error: any) {
-        // If it's a 429, the 'failed' event will handle it.
-        // For other errors, we still increment the count if the request was actually made.
-        if (error.response) {
-          await quotaTracker.incrementRequestCount();
-        }
-        throw error;
-      }
-    });
-  }
-}
-
-export const rateLimiter = new RateLimiter();
+rateLimiter.on('depleted', () => {
+  console.warn('🚨 Rate limit reservoir depleted for the day.');
+});
