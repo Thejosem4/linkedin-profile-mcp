@@ -1,0 +1,51 @@
+{
+  "id": "test-user-123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "headline": "Software Engineer at Tech Corp",
+  "summary": "Experienced software engineer with a passion for building scalable applications.",
+  "location": "San Francisco, CA",
+  "industry": "Software Development",
+  "experiences": [
+    {
+      "id": "exp-1",
+      "title": "Senior Software Engineer",
+      "companyName": "Tech Corp",
+      "location": "San Francisco, CA",
+      "startDate": { "month": 1, "year": 2020 },
+      "isCurrent": true,
+      "description": "Leading the backend team in developing microservices."
+    }
+  ],
+  "educations": [
+    {
+      "id": "edu-1",
+      "schoolName": "University of Technology",
+      "degree": "Bachelor of Science",
+      "fieldOfStudy": "Computer Science",
+      "startDate": { "year": 2015 },
+      "endDate": { "year": 2019 }
+    }
+  ],
+  "skills": [
+    { "id": "skill-1", "name": "TypeScript" },
+    { "id": "skill-2", "name": "Node.js" },
+    { "id": "skill-3", "name": "React" }
+  ],
+  "certifications": [
+    {
+      "id": "cert-1",
+      "name": "AWS Certified Solutions Architect",
+      "authority": "Amazon Web Services",
+      "startDate": { "month": 6, "year": 2021 }
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "title": "Open Source Library",
+      "description": "A library for handling complex data structures.",
+      "startDate": { "month": 3, "year": 2022 }
+    }
+  ]
+}
