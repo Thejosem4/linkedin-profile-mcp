@@ -1,152 +1,106 @@
 # LinkedIn Profile MCP Server 🚀
 
-[English](#english) | [Español](#español)
+<p align="center">
+  <img src="https://img.shields.io/badge/MCP-Server-blue?style=for-the-badge&logo=anthropic" alt="MCP Server">
+  <img src="https://img.shields.io/badge/TypeScript-Ready-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/LinkedIn-API%20v2-0A66C2?style=for-the-badge&logo=linkedin" alt="LinkedIn API">
+  <img src="https://img.shields.io/badge/Testing-Jest-C21325?style=for-the-badge&logo=jest" alt="Jest">
+</p>
+
+<p align="center">
+  <b>Bilingual Documentation / Documentación Bilingüe</b><br>
+  <a href="#english">English</a> • <a href="#español">Español</a>
+</p>
 
 ---
 
 <a name="english"></a>
 ## 🇺🇸 English Version
 
-A Model Context Protocol (MCP) server designed to audit, optimize, and manage your LinkedIn profile through Claude. This server acts as your personal branding consultant, with direct access to LinkedIn's API to read your current profile and propose strategic improvements.
+An intelligent bridge between **Claude** and **LinkedIn**. This MCP server empowers Claude to act as your high-level career consultant, capable of auditing your profile, optimizing your identity, and managing your professional content with real-time API access.
+
+### 🏗 Architecture Overview
+
+```mermaid
+graph TD
+    User((User)) <--> Claude[Claude AI]
+    Claude <--> MCP[LinkedIn MCP Server]
+    subgraph "Internal Logic"
+        MCP --> Auth[OAuth 2.0 / Keytar]
+        MCP --> Tools[40+ Professional Tools]
+        MCP --> AI[AI-Assist Layer]
+    end
+    Tools <--> API[(LinkedIn API v2)]
+    AI <--> Prompts[Strategic Templates]
+```
 
 ### ✨ Key Features
-- **Comprehensive Profile Audit**: Analyze your headline, summary, and experience for impact and clarity.
-- **Identity Management**: Update your headline and "About" section with character-limit validation.
-- **Professional History**: Manage experiences, education, skills, and certifications.
-- **Content Creation**: Post updates and articles directly from Claude.
-- **AI-Assist Optimization**: ATS gap analysis and professional content generation without clichés.
-- **Security First**: Mandatory `diff_preview` for every change and secure OS-level token storage.
-
-### ⚙️ Environment Configuration (.env)
-
-To run this server, you must create a `.env` file in the project root. Use `.env.example` as a template.
-
-| Variable | Description |
-| :--- | :--- |
-| `LINKEDIN_CLIENT_ID` | Your LinkedIn App Client ID from the Developer Portal. |
-| `LINKEDIN_CLIENT_SECRET` | Your LinkedIn App Client Secret. |
-| `LINKEDIN_REDIRECT_URI` | Must match the Redirect URL in your LinkedIn App (default: `http://localhost:3000/auth/callback`). |
-| `PORT` | The port for the local OAuth callback server (default: `3000`). |
-| `LOG_LEVEL` | Logging verbosity (`debug`, `info`, `warn`, `error`). |
-| `USER_SECTOR` | Your professional sector (e.g., `technology`, `finance`). |
-| `USER_OBJECTIVE` | Your main goal: `job_search`, `personal_brand`, `freelance`, `promotion`. |
-| `USER_AUDIENCE` | Target audience: `recruiters`, `clients`, `peers`, `general`. |
-| `USER_TONE` | Communication style: `formal`, `conversational`, `technical`. |
-| `PROFILE_LANGUAGE` | Your profile's primary language (e.g., `en`, `es`). |
+- **Impact Audit**: Data-driven analysis of your profile's effectiveness.
+- **Identity Control**: Precision updates for headlines and summaries.
+- **Content Engine**: Direct posting of updates and articles.
+- **Smart ATS**: Match your profile against specific job descriptions.
+- **Security Hub**: Mandatory diff previews and encrypted token storage.
 
 ### 🚀 Quick Start
 
-#### Prerequisites
-- Node.js (v18 or higher)
-- A LinkedIn Developer App (Client ID & Secret)
-
-#### Installation
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Thejosem4/linkedin-profile-mcp.git
-   cd linkedin-profile-mcp
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Configure Environment:**
-   Copy `.env.example` to `.env` and fill in your LinkedIn credentials.
-   ```bash
-   cp .env.example .env
-   ```
-
-4. **Build & Test:**
-   ```bash
-   npm run build
-   npm run test
-   ```
-
-#### Usage
-Start the MCP server:
-```bash
-npm start
-```
-Connect it to your Claude Desktop or Claude Code client using the project path.
+| Step | Action | Command |
+| :--- | :--- | :--- |
+| 1 | Clone | `git clone https://github.com/Thejosem4/linkedin-profile-mcp.git` |
+| 2 | Install | `npm install` |
+| 3 | Config | `cp .env.example .env` |
+| 4 | Build | `npm run build` |
+| 5 | Start | `npm start` |
 
 ---
 
 <a name="español"></a>
 ## 🇪🇸 Versión en Español
 
-Un servidor de Model Context Protocol (MCP) diseñado para auditar, optimizar y gestionar tu perfil de LinkedIn a través de Claude. Este servidor actúa como tu consultor personal de marca, con acceso directo a la API de LinkedIn para leer tu perfil actual y proponer mejoras estratégicas.
+Un puente inteligente entre **Claude** y **LinkedIn**. Este servidor MCP permite que Claude actúe como tu consultor de carrera de alto nivel, capaz de auditar tu perfil, optimizar tu identidad y gestionar tu contenido profesional con acceso en tiempo real a la API.
+
+### 🏗 Vista General de la Arquitectura
+
+```mermaid
+graph TD
+    User((Usuario)) <--> Claude[Claude AI]
+    Claude <--> MCP[LinkedIn MCP Server]
+    subgraph "Lógica Interna"
+        MCP --> Auth[OAuth 2.0 / Keytar]
+        MCP --> Tools[40+ Herramientas Prof.]
+        MCP --> AI[Capa de Asistencia IA]
+    end
+    Tools <--> API[(API de LinkedIn v2)]
+    AI <--> Prompts[Plantillas Estratégicas]
+```
 
 ### ✨ Características Principales
-- **Auditoría Integral**: Analiza tu titular, extracto y experiencia para mejorar el impacto y la claridad.
-- **Gestión de Identidad**: Actualiza tu titular y sección "Acerca de" con validación de límites de caracteres.
-- **Historial Profesional**: Gestiona experiencias, educación, aptitudes y certificaciones.
-- **Creación de Contenido**: Publica actualizaciones y artículos directamente desde Claude.
-- **Optimización con IA**: Análisis de brechas ATS y generación de contenido profesional sin clichés.
-- **Seguridad Ante Todo**: `diff_preview` obligatorio para cada cambio y almacenamiento seguro de tokens.
-
-### ⚙️ Configuración del Entorno (.env)
-
-Para ejecutar este servidor, debes crear un archivo `.env` en la raíz del proyecto. Usa `.env.example` como plantilla.
-
-| Variable | Descripción |
-| :--- | :--- |
-| `LINKEDIN_CLIENT_ID` | Tu Client ID de la App de LinkedIn desde el Portal de Desarrolladores. |
-| `LINKEDIN_CLIENT_SECRET` | Tu Client Secret de la App de LinkedIn. |
-| `LINKEDIN_REDIRECT_URI` | Debe coincidir con la URL de Redirección en tu App de LinkedIn (por defecto: `http://localhost:3000/auth/callback`). |
-| `PORT` | El puerto para el servidor local de callback de OAuth (por defecto: `3000`). |
-| `LOG_LEVEL` | Nivel de detalle de los logs (`debug`, `info`, `warn`, `error`). |
-| `USER_SECTOR` | Tu sector profesional (ej: `tecnología`, `finanzas`). |
-| `USER_OBJECTIVE` | Tu objetivo principal: `job_search`, `personal_brand`, `freelance`, `promotion`. |
-| `USER_AUDIENCE` | Audiencia objetivo: `recruiters`, `clients`, `peers`, `general`. |
-| `USER_TONE` | Estilo de comunicación: `formal`, `conversacional`, `técnico`. |
-| `PROFILE_LANGUAGE` | Idioma principal de tu perfil (ej: `en`, `es`). |
+- **Auditoría de Impacto**: Análisis basado en datos sobre la efectividad de tu perfil.
+- **Control de Identidad**: Actualizaciones de precisión para titulares y extractos.
+- **Motor de Contenido**: Publicación directa de actualizaciones y artículos.
+- **ATS Inteligente**: Compara tu perfil contra descripciones de empleo específicas.
+- **Hub de Seguridad**: Previsualización de cambios obligatoria y almacenamiento cifrado.
 
 ### 🚀 Inicio Rápido
 
-#### Requisitos Previos
-- Node.js (v18 o superior)
-- Una App en LinkedIn Developer (Client ID y Secret)
-
-#### Instalación
-1. **Clona el repositorio:**
-   ```bash
-   git clone https://github.com/Thejosem4/linkedin-profile-mcp.git
-   cd linkedin-profile-mcp
-   ```
-
-2. **Instala las dependencias:**
-   ```bash
-   npm install
-   ```
-
-3. **Configura el Entorno:**
-   Copia `.env.example` a `.env` y completa tus credenciales de LinkedIn.
-   ```bash
-   cp .env.example .env
-   ```
-
-4. **Compila y Prueba:**
-   ```bash
-   npm run build
-   npm run test
-   ```
-
-#### Uso
-Inicia el servidor MCP:
-```bash
-npm start
-```
-Conéctalo a tu cliente Claude Desktop o Claude Code usando la ruta del proyecto.
+| Paso | Acción | Comando |
+| :--- | :--- | :--- |
+| 1 | Clonar | `git clone https://github.com/Thejosem4/linkedin-profile-mcp.git` |
+| 2 | Instalar | `npm install` |
+| 3 | Configurar | `cp .env.example .env` |
+| 4 | Compilar | `npm run build` |
+| 5 | Iniciar | `npm start` |
 
 ---
 
-## 📚 Documentation / Documentación
+## ⚙️ Configuration / Configuración (.env)
+
+Detailed guide available in the [Setup Guide](docs/setup-oauth.md).
+Guía detallada disponible en la [Guía de Configuración](docs/setup-oauth.md).
+
+## 📚 Resources / Recursos
 - [Tools Reference / Referencia de Herramientas](docs/tools-reference.md)
-- [OAuth Setup Guide / Guía de Configuración OAuth](docs/setup-oauth.md)
 - [Contributing / Contribuir](CONTRIBUTING.md)
+- [Changelog / Historial de Cambios](CHANGELOG.md)
 
 ## 📄 License / Licencia
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-Este proyecto está bajo la Licencia MIT - mira el archivo [LICENSE](LICENSE) para más detalles.
+MIT License © 2026 Thejosem4

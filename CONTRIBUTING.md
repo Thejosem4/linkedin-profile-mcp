@@ -1,31 +1,80 @@
-# Contributing to LinkedIn Profile MCP
+# Contributing to LinkedIn Profile MCP / Contribuir a LinkedIn Profile MCP 🤝
 
-We welcome contributions! This guide will help you add new tools or improve the AI logic.
+[English](#english) | [Español](#español)
 
-## Development Setup
+---
 
-1. Clone the repository and install dependencies (`npm install`).
-2. Ensure you have a `.env` file with valid LinkedIn API credentials for testing.
-3. Run tests using `npm run test`.
+<a name="english"></a>
+## 🇺🇸 English: Contribution Guide
 
-## Adding a New Tool
+We're excited that you want to contribute! This project aims to be the most robust bridge between Claude and LinkedIn.
 
-1. **Create the Tool Logic**: Add a new file or function in `src/tools/`. Ensure it returns a `Promise<ToolResult>`.
-2. **Export the Tool**: Export your new function in `src/tools/index.ts`.
-3. **Register the Tool**: Open `src/index.ts` and:
-   - Add the tool definition to the `ListToolsRequestSchema` handler.
-   - Add a `case` statement in the `CallToolRequestSchema` handler to execute your function.
-4. **Update Documentation**: Add the new tool to `docs/tools-reference.md`.
+### 🛠 Development Workflow
 
-## Improving AI Logic
+```mermaid
+graph LR
+    A[Fork & Clone] --> B[npm install]
+    B --> C[Create Branch]
+    C --> D[Code & Test]
+    D --> E[Pull Request]
+```
 
-The AI assistance tools are located in `src/tools/ai-assist.ts` and use prompts from `src/prompts/`.
-- To improve the analysis, modify `analyze_profile` or the underlying prompt templates.
-- To improve ATS optimization, update the keyword extraction logic in `src/utils/keyword-extractor.ts`.
+1. **Setup Environment**:
+   - Create a `.env` file based on `.env.example`.
+   - Run `npm install`.
+2. **Verification**:
+   - Ensure all tests pass: `npm run test`.
+   - Verify build: `npm run build`.
 
-## Code Style
+### 🚀 Adding New Tools
+1. **Logic**: Implement your tool in `src/tools/`. It must return `Promise<ToolResult>`.
+2. **Export**: Add the export to `src/tools/index.ts`.
+3. **Register**: Add the tool definition and handler in `src/index.ts`.
+4. **Docs**: Update `docs/tools-reference.md`.
 
-- Use TypeScript.
-- Prefer explicit types for function parameters and return values.
-- Document functions using JSDoc comments.
-- Ensure all tests pass before submitting a pull request.
+### 🧠 Enhancing AI Logic
+- **Analysis**: Modify `analyze_profile` in `src/tools/ai-assist.ts`.
+- **Prompts**: Update templates in `src/prompts/templates.ts`.
+- **ATS**: Refine `src/utils/keyword-extractor.ts`.
+
+---
+
+<a name="español"></a>
+## 🇪🇸 Español: Guía de Contribución
+
+¡Nos emociona que quieras contribuir! Este proyecto aspira a ser el puente más robusto entre Claude y LinkedIn.
+
+### 🛠 Flujo de Desarrollo
+
+```mermaid
+graph LR
+    A[Fork y Clonar] --> B[npm install]
+    B --> C[Crear Rama]
+    C --> D[Codear y Probar]
+    D --> E[Pull Request]
+```
+
+1. **Configuración**:
+   - Crea un archivo `.env` basado en `.env.example`.
+   - Ejecuta `npm install`.
+2. **Verificación**:
+   - Asegúrate de que los tests pasen: `npm run test`.
+   - Verifica la compilación: `npm run build`.
+
+### 🚀 Añadir Nuevas Herramientas
+1. **Lógica**: Implementa tu herramienta en `src/tools/`. Debe retornar `Promise<ToolResult>`.
+2. **Exportación**: Añade el export en `src/tools/index.ts`.
+3. **Registro**: Añade la definición y el handler en `src/index.ts`.
+4. **Documentación**: Actualiza `docs/tools-reference.md`.
+
+### 🧠 Mejorar la Lógica de IA
+- **Análisis**: Modifica `analyze_profile` en `src/tools/ai-assist.ts`.
+- **Prompts**: Actualiza las plantillas en `src/prompts/templates.ts`.
+- **ATS**: Refina `src/utils/keyword-extractor.ts`.
+
+---
+
+## 💎 Code Standards / Estándares de Código
+- **TypeScript**: Always use explicit types. / Usa siempre tipos explícitos.
+- **JSDoc**: Document all public functions. / Documenta todas las funciones públicas.
+- **Tests**: PRs without tests will not be accepted. / No se aceptarán PRs sin pruebas.
