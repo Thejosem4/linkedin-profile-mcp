@@ -288,6 +288,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["jobDescription"],
         },
       },
+      {
+        name: "authenticate",
+        description: "Start the OAuth 2.0 flow to authenticate with LinkedIn. Run this first to get your tokens.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
     ],
   };
 });
@@ -300,6 +308,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
+      case "authenticate": {
+        console.error("🔑 Starting authentication flow...");
+        const { oauthManager } = await import("./auth/oauth.js");
+        const code = await oauthManager.startCallbackServer();
+        const tokens = await oauthManager.handleCallback(code);
+        return {
+          content: [
+            {
+              type: "text",
+              text: "✅ Authentication successful! Tokens have been saved securely.",
+            },
+          ],
+        };
+      }
       case "get_profile": {
         const result = await get_profile();
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };

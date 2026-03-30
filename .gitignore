@@ -3,3 +3,6 @@ dist/
 .env
 *.log
 .cache/
+.DS_Store
+.linkedin-profile-mcp/
+tests/fixtures/*.json.tmp
