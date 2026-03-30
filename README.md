@@ -17,12 +17,22 @@ A Model Context Protocol (MCP) server designed to audit, optimize, and manage yo
 - **AI-Assist Optimization**: ATS gap analysis and professional content generation without clichés.
 - **Security First**: Mandatory `diff_preview` for every change and secure OS-level token storage.
 
-### 🛠 Tech Stack
-- **TypeScript & Node.js 20+**
-- **@modelcontextprotocol/sdk**
-- **LinkedIn API v2 (OAuth 2.0)**
-- **Keytar** (Secure Credential Storage)
-- **Jest** (Comprehensive Testing)
+### ⚙️ Environment Configuration (.env)
+
+To run this server, you must create a `.env` file in the project root. Use `.env.example` as a template.
+
+| Variable | Description |
+| :--- | :--- |
+| `LINKEDIN_CLIENT_ID` | Your LinkedIn App Client ID from the Developer Portal. |
+| `LINKEDIN_CLIENT_SECRET` | Your LinkedIn App Client Secret. |
+| `LINKEDIN_REDIRECT_URI` | Must match the Redirect URL in your LinkedIn App (default: `http://localhost:3000/auth/callback`). |
+| `PORT` | The port for the local OAuth callback server (default: `3000`). |
+| `LOG_LEVEL` | Logging verbosity (`debug`, `info`, `warn`, `error`). |
+| `USER_SECTOR` | Your professional sector (e.g., `technology`, `finance`). |
+| `USER_OBJECTIVE` | Your main goal: `job_search`, `personal_brand`, `freelance`, `promotion`. |
+| `USER_AUDIENCE` | Target audience: `recruiters`, `clients`, `peers`, `general`. |
+| `USER_TONE` | Communication style: `formal`, `conversational`, `technical`. |
+| `PROFILE_LANGUAGE` | Your profile's primary language (e.g., `en`, `es`). |
 
 ### 🚀 Quick Start
 
@@ -76,12 +86,22 @@ Un servidor de Model Context Protocol (MCP) diseñado para auditar, optimizar y 
 - **Optimización con IA**: Análisis de brechas ATS y generación de contenido profesional sin clichés.
 - **Seguridad Ante Todo**: `diff_preview` obligatorio para cada cambio y almacenamiento seguro de tokens.
 
-### 🛠 Stack Tecnológico
-- **TypeScript & Node.js 20+**
-- **@modelcontextprotocol/sdk**
-- **LinkedIn API v2 (OAuth 2.0)**
-- **Keytar** (Almacenamiento seguro de credenciales)
-- **Jest** (Suite de pruebas completa)
+### ⚙️ Configuración del Entorno (.env)
+
+Para ejecutar este servidor, debes crear un archivo `.env` en la raíz del proyecto. Usa `.env.example` como plantilla.
+
+| Variable | Descripción |
+| :--- | :--- |
+| `LINKEDIN_CLIENT_ID` | Tu Client ID de la App de LinkedIn desde el Portal de Desarrolladores. |
+| `LINKEDIN_CLIENT_SECRET` | Tu Client Secret de la App de LinkedIn. |
+| `LINKEDIN_REDIRECT_URI` | Debe coincidir con la URL de Redirección en tu App de LinkedIn (por defecto: `http://localhost:3000/auth/callback`). |
+| `PORT` | El puerto para el servidor local de callback de OAuth (por defecto: `3000`). |
+| `LOG_LEVEL` | Nivel de detalle de los logs (`debug`, `info`, `warn`, `error`). |
+| `USER_SECTOR` | Tu sector profesional (ej: `tecnología`, `finanzas`). |
+| `USER_OBJECTIVE` | Tu objetivo principal: `job_search`, `personal_brand`, `freelance`, `promotion`. |
+| `USER_AUDIENCE` | Audiencia objetivo: `recruiters`, `clients`, `peers`, `general`. |
+| `USER_TONE` | Estilo de comunicación: `formal`, `conversacional`, `técnico`. |
+| `PROFILE_LANGUAGE` | Idioma principal de tu perfil (ej: `en`, `es`). |
 
 ### 🚀 Inicio Rápido
 
